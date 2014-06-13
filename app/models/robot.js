@@ -1,78 +1,107 @@
 // app/models/robot.js
-var five = require("johnny-five")
+var net = require("net");
+var five = require("johnny-five");
 
 function Robot(id) {
   this.id = id;
 
-  // New johnny-five board
-  this.board = new five.Board();
+  // Create socket to communicate with firmata
+  this.socket = net.createConnection(27015, '192.168.43.66');
+    console.log('Socket created.');
+  this.socket.on('data', function (data) {
+    // Log the response from the HTTP server.
+    console.log('RESPONSE: ' + data);
+  }).on('connect', function () {
+    // Manually write an HTTP request.
+    console.log("connected");
+  }).on('end', function () {
+    console.log('DONE');
+  });
 
+  // New johnny-five board
+  // With socket connection
+  this.board = new five.Board({
+    port: this.socket
+  });
+
+  // Create board and motors
   this.board.on("ready", function() {
     motors = {
-      left: new five.Motor([3, 12]), // pwm: 3, dir: 12
-      right: new five.Motor([11, 2])
+      // Each motor needs 3 pins for this shield. pwm, dir, and brake.
+      // a
+      left: new five.Motor({
+        pins: {
+          pwm: 3,
+          dir: 12,
+          brake: 9
+        }
+      }),
+      // b
+      right: new five.Motor({
+        pins: {
+          pwm: 11,
+          dir: 13,
+          brake: 8 
+        }
+      })
     };
 
-    led = new five.Led({
-      pin:13
+    this.repl.inject({
+      motors: motors
     });
+
+    // Turn on brakes when we create the board
+    // Helps with clean up from previous server
+    motors.left.brake();
+    motors.right.brake();
   });
+
+  // Stops motors after a specified duration
+  five.Board.prototype.motorDuration = function(duration) {
+    this.wait(duration, function() {
+      motors.left.stop();
+      motors.right.stop();
+    });
+  }
 
   // Control function for motors
   five.Board.prototype.motorController 
               = function(direction, speed, duration) {
     console.log("motorController:" + direction)
     switch(direction) {
-      case 'forward':
+      case 'FORWARD':
         motors.left.fwd(speed);
         motors.right.fwd(speed);
-        motorDuration(duration);
+        this.motorDuration(duration);
         break;
-      case 'backward':
+      case 'BACKWARD':
         motors.left.rev(speed);
         motors.right.rev(speed);
-        motorDuration(duration);
+        this.motorDuration(duration);
         break;
-      case 'left':
+      case 'LEFT':
         motors.left.rev(speed);
         motors.right.fwd(speed);
-        motorDuration(duration);
+        this.motorDuration(duration);
         break;
-      case 'right':
+      case 'RIGHT':
         motors.left.fwd(speed);
-        motors.right.fwd(speed);
-        motorDuration(duration);
+        motors.right.rev(speed);
+        this.motorDuration(duration);
         break;
-    }
-
-    five.Board.prototype.motorDuration = function(duration) {
-      board.wait(duration, function() {
+      case 'STOP':
         motors.left.stop();
         motors.right.stop();
-      });
+        break;
     }
   }  
-
-  five.Board.prototype.ledControl = function(command) {
-    switch(command) {
-      case 'on':
-        led.on();
-        break;
-      case 'off':
-        led.off();
-        break;
-    }
-  }
 }
 
 // move the robot in the specified direction for a defined speed and
 // duration
 Robot.prototype.move = function(direction, speed, duration) {
-  // move in direction hjkl
   console.log(direction);
-  //this.board.motorController(direction);
-  this.board.ledControl(direction);
-
+  this.board.motorController(direction, speed, duration);
 }
 
 module.exports = Robot;

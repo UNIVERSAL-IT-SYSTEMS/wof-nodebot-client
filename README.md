@@ -14,6 +14,18 @@ message[color],
 ```
 If this line isn't commented out the server will throw an exception when you try to run it.
 
+Then in app/models/robot.js change 
+```
+GALILEO_IP
+```
+to the IP address of your galileo. You can check the IP from command line with the command
+```
+ping -4 <galileo_hostname>
+
+# example
+ping -4 mygalileo
+```
+
 To start the server, first run the Firmata project from visual studio on your Galileo board.
 Then from command line run the following command 
 

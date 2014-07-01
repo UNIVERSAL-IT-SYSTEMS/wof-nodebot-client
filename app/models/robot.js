@@ -6,7 +6,7 @@ function Robot(id) {
   this.id = id;
 
   // Create socket to communicate with firmata
-  this.socket = net.createConnection(27015, '192.168.43.66');
+  this.socket = net.createConnection(27015, 'GALILEO_IP');
     console.log('Socket created.');
   this.socket.on('data', function (data) {
     // Log the response from the HTTP server.

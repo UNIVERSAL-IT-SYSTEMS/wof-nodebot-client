@@ -50,8 +50,8 @@ curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POS
 ```
 "localhost" in the example can be changed to the ip address the server is running on.
 
-*Direction can be left, right, forward, backward
-*Speed can be 0-255
-*Duration is in milliseconds.
+* Direction can be left, right, forward, backward
+* Speed can be 0-255
+* Duration is in milliseconds.
 
 You can also post a list of commands. Just post an array of the command objects to localhost:3000/robot/list

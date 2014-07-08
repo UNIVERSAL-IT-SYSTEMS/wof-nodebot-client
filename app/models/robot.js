@@ -2,11 +2,11 @@
 var net = require("net");
 var five = require("johnny-five");
 
-function Robot(id) {
+function Robot(id, galileoIP) {
   this.id = id;
 
   // Create socket to communicate with firmata
-  this.socket = net.createConnection(27015, 'GALILEO_IP');
+  this.socket = net.createConnection(27015, galileoIP);
     console.log('Socket created.');
   this.socket.on('data', function (data) {
     // Log the response from the HTTP server.

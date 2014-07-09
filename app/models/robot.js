@@ -1,11 +1,17 @@
 // app/models/robot.js
 var net = require("net");
 var five = require("johnny-five");
+var Queue = require('../utils/Queue.js');
+
+// variable for debugging without robot
+var debug = false;
 
 function Robot(id, galileoIP) {
   this.id = id;
+  this.queue = new Queue();
 
-  // Create socket to communicate with firmata
+  if(debug === false) {
+  // Create socket to communicate with firmata on the Galileo
   this.socket = net.createConnection(27015, galileoIP);
     console.log('Socket created.');
   this.socket.on('data', function (data) {
@@ -55,6 +61,7 @@ function Robot(id, galileoIP) {
     motors.left.brake();
     motors.right.brake();
   });
+  }
 
   // Stops motors after a specified duration
   five.Board.prototype.motorDuration = function(duration) {
@@ -97,11 +104,28 @@ function Robot(id, galileoIP) {
   }  
 }
 
-// move the robot in the specified direction for a defined speed and
-// duration
-Robot.prototype.move = function(direction, speed, duration) {
-  console.log(direction);
-  this.board.motorController(direction, speed, duration);
+// move the robot in the specified direction for a defined speed and duration
+Robot.prototype.move = function(command) {
+  console.log('move command: ' + command);
+  this.board.motorController(command.direction, command.speed, command.duration);
+}
+
+// Set queue for the robot
+Robot.prototype.setQueue = function(list) {
+  console.log('set queue: ' + list);
+
+  // enqueue each command
+  for(var i = 0; i < list.length; i++)
+    this.queue.enqueue(list[i]);
+}
+
+// Run the queue of commands
+Robot.prototype.runQueue = function() {
+  if(this.queue.isEmpty())
+    return
+  while(!this.queue.isEmpty()) {
+    this.moveCommand(this.queue.dequeue());
+  }
 }
 
 module.exports = Robot;

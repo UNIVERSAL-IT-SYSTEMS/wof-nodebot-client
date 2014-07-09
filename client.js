@@ -13,13 +13,9 @@ var robot = new Robot('4', galileoIP); // give robot id
 /*
  * Takes one direction and executes it.
  */
-socket.on('robotControl', function(data){
-  console.log(data);
-	var direction = data.direction,
-	speed = data.speed,
-	duration = data.duration;
-  console.log(speed + " " + duration + " " + direction);
-	robot.move(direction, speed, duration);
+socket.on('robotControl', function(command){
+  console.log(command);
+	robot.move(command);
 });
 
 /*
@@ -29,7 +25,7 @@ socket.on('robotControlList', function(data) {
   console.log(data);
   var commandList = data.commandList;
 
-  for(var i = 0; i < commandList.length; i++) {
-    var command = commandList[i];
-  }
+  // Set the robots queue
+  robot.setQueue(commandList);
+  robot.runQueue();
 });

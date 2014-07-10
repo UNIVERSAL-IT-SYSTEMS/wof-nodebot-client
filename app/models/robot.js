@@ -4,13 +4,14 @@ var five = require("johnny-five");
 var Queue = require('../utils/Queue.js');
 
 // variable for debugging without robot
-var debug = false;
+// Set to false if not connected.
+var isRobot = true;
 
 function Robot(id, galileoIP) {
   this.id = id;
   this.queue = new Queue();
 
-  if(debug === false) {
+  if(isRobot) {
   // Create socket to communicate with firmata on the Galileo
   this.socket = net.createConnection(27015, galileoIP);
     console.log('Socket created.');
@@ -52,30 +53,37 @@ function Robot(id, galileoIP) {
       })
     };
 
+    // Allow override control of motors from the REPL
+    // E.g. >> motors.left.fwd(255)
     this.repl.inject({
       motors: motors
     });
 
     // Turn on brakes when we create the board
-    // Helps with clean up from previous server
     motors.left.brake();
     motors.right.brake();
   });
   }
+}
 
-  // Stops motors after a specified duration
-  five.Board.prototype.motorDuration = function(duration) {
-    this.wait(duration, function() {
+/*
+ * Stops motors after a given duration.
+ * Calls runQueue to continue the queue.
+ */
+Robot.prototype.motorDuration = function(duration) {
+  var that = this;
+  this.board.wait(duration, function() {
       motors.left.stop();
       motors.right.stop();
-    });
-  }
+      that.runQueue();
+  });
+}
 
-  // Control function for motors
-  five.Board.prototype.motorController 
-              = function(direction, speed, duration) {
-    console.log("motorController:" + direction)
-    switch(direction) {
+/*
+ * Control the motors on the robot.
+ */
+Robot.prototype.motorControl = function(direction, speed, duration) {
+  switch(direction) {
       case 'FORWARD':
         motors.left.fwd(speed);
         motors.right.fwd(speed);
@@ -101,31 +109,36 @@ function Robot(id, galileoIP) {
         motors.right.stop();
         break;
     }
-  }  
 }
 
-// move the robot in the specified direction for a defined speed and duration
+/*
+ * move the robot in the specified direction for a defined speed and duration
+ */
 Robot.prototype.move = function(command) {
-  console.log('move command: ' + command);
-  this.board.motorController(command.direction, command.speed, command.duration);
+  console.log('Move: ' + command.direction);
+  this.motorControl(command.direction, command.speed, command.duration);
 }
 
-// Set queue for the robot
+/*
+ * Set queue for the robot
+ */
 Robot.prototype.setQueue = function(list) {
-  console.log('set queue: ' + list);
+  console.log('Set Queue: ' + list);
 
   // enqueue each command
-  for(var i = 0; i < list.length; i++)
+  for(var i = 0; i < list.length; i++) {
+    console.log(list[i].direction);
     this.queue.enqueue(list[i]);
+  }
 }
 
-// Run the queue of commands
+/*
+ * Run the queue of commands
+ */
 Robot.prototype.runQueue = function() {
   if(this.queue.isEmpty())
     return
-  while(!this.queue.isEmpty()) {
-    this.moveCommand(this.queue.dequeue());
-  }
+  this.move(this.queue.dequeue());
 }
 
 module.exports = Robot;

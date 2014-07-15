@@ -149,7 +149,6 @@ function Robot(id, galileoIP) {
  * Stops motors after a given duration.
  * Calls runQueue to continue the queue.
  */
-/*
 Robot.prototype.motorDuration = function(duration) {
   var that = this;
   this.board.wait(duration, function() {
@@ -158,28 +157,31 @@ Robot.prototype.motorDuration = function(duration) {
       that.runQueue();
   });
 }
-*/
 
 /*
  * Control the motors on the robot.
  */
-Robot.prototype.motorControl = function(direction) {
+Robot.prototype.motorControl = function(direction, duration) {
   switch(direction) {
       case 'FORWARD':
         motors.left.fwd(setPWM);
         motors.right.fwd(setPWM);
+        this.motorDuration(duration)
         break;
       case 'BACKWARD':
           motors.left.rev(setPWM);
           motors.right.rev(setPWM);
+          this.motorDuration(duration)
         break;
       case 'LEFT':
           motors.left.rev(setPWM);
           motors.right.fwd(setPWM);
+          this.motorDuration(duration)
         break;
       case 'RIGHT':
           motors.left.fwd(setPWM);
           motors.right.rev(setPWM);
+          this.motorDuration(duration)
         break;
       case 'STOP':
         motors.left.stop();
@@ -192,33 +194,8 @@ Robot.prototype.motorControl = function(direction) {
                                 //Easy Calibration Functions//
 /*******************************************************************************************************/
 Robot.prototype.move = function (command) {
-    var that = this; //WHY IS THIS NEEDED? HOW/WHEN DOES "THIS" CHANGE?
-    console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
-    
-    //Turn command.angle degrees
-    var duration;
-    if (command.angle > 0) {
-        duration = command.angle / rotationalSpeedRight; // deg/(deg/ms) = ms
-        this.motorControl('RIGHT'); 
-    } else if (command.angle < 0) {
-        duration = -command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
-        this.motorControl('LEFT');
-    }
-    this.board.wait(duration, function() {
-        motors.left.stop();
-        motors.right.stop();
-    })
-
-    //Move command.distance units forward
-    duration = command.distance / forwardSpeed; // distance/(distance/ms) = ms
-    this.motorControl('FORWARD');
-    this.board.wait(duration, function () {
-        motors.left.stop();
-        motors.right.stop();
-    })
-
-    //Get the next direction
-    that.runQueue();
+    console.log('Direction: ' + command.direction + ', Duration: ' + command.duration);
+    this.motorControl(command.direction, command.duration);
 }
 
 /*******************************************************************************************************/
@@ -243,7 +220,25 @@ Robot.prototype.setQueue = function(list) {
   for (var i = 0; i < list.length; i++) {
       var command = list[i];
       console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
-    this.queue.enqueue(list[i]);
+
+      var direction;
+      var duration;
+      if (command.angle > 0) {
+          duration = command.angle / rotationalSpeedRight; // deg/(deg/ms) = ms
+          direction = 'RIGHT';
+      } else if (command.angle < 0) {
+          duration = -command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
+          direction = 'LEFT';
+      }
+
+      if(command.angle != 0){
+          var angleCommand = { direction: direction, duration: duration };
+          this.queue.enqueue(angleCommand);
+      }
+      if (command.distance != 0) {
+          var distanceCommand = { direction: 'FORWARD', duration: command.distance / forwardSpeed };
+          this.queue.enqueue(distanceCommand);
+      }
   }
 }
 

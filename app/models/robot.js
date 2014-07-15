@@ -149,6 +149,7 @@ function Robot(id, galileoIP) {
  * Stops motors after a given duration.
  * Calls runQueue to continue the queue.
  */
+/*
 Robot.prototype.motorDuration = function(duration) {
   var that = this;
   this.board.wait(duration, function() {
@@ -157,31 +158,28 @@ Robot.prototype.motorDuration = function(duration) {
       that.runQueue();
   });
 }
+*/
 
 /*
  * Control the motors on the robot.
  */
-Robot.prototype.motorControl = function(direction, speed, duration) {
+Robot.prototype.motorControl = function(direction) {
   switch(direction) {
       case 'FORWARD':
-        motors.left.fwd(speed);
-        motors.right.fwd(speed);
-        this.motorDuration(duration);
+        motors.left.fwd(setPWM);
+        motors.right.fwd(setPWM);
         break;
       case 'BACKWARD':
-        motors.left.rev(speed);
-        motors.right.rev(speed);
-        this.motorDuration(duration);
+          motors.left.rev(setPWM);
+          motors.right.rev(setPWM);
         break;
       case 'LEFT':
-        motors.left.rev(speed);
-        motors.right.fwd(speed);
-        this.motorDuration(duration);
+          motors.left.rev(setPWM);
+          motors.right.fwd(setPWM);
         break;
       case 'RIGHT':
-        motors.left.fwd(speed);
-        motors.right.rev(speed);
-        this.motorDuration(duration);
+          motors.left.fwd(setPWM);
+          motors.right.rev(setPWM);
         break;
       case 'STOP':
         motors.left.stop();
@@ -194,15 +192,33 @@ Robot.prototype.motorControl = function(direction, speed, duration) {
                                 //Easy Calibration Functions//
 /*******************************************************************************************************/
 Robot.prototype.move = function (command) {
-    console.log('Turn: ' + command.Angle + ', Go forward: ' + command.Distance);
-    var direction;
-    var speed;
-    if (command.Angle > 0) {
-        this.motorControl('RIGHT', setPWM, command.Angle / rotationalSpeedRight); // deg/(deg/ms) = ms
-    } else if (command.Angle < 0) {
-        this.motorControl('LEFT', setPWM, command.Angle / rotationalSpeedLeft); // deg/(deg/ms) = ms
+    var that = this; //WHY IS THIS NEEDED? HOW DOES THIS CHANGE?
+    console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
+    
+    //Turn command.angle degrees
+    var duration;
+    if (command.angle > 0) {
+        duration = command.angle / rotationalSpeedRight; // deg/(deg/ms) = ms
+        this.motorControl('RIGHT'); 
+    } else if (command.angle < 0) {
+        duration = command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
+        this.motorControl('LEFT');
     }
-    this.motorControl('FORWARD', setPWM, command.Distance / forwardSpeed); // distance/(distance/ms) = ms
+    this.board.wait(duration, function() {
+        motors.left.stop();
+        motors.right.stop();
+    })
+
+    //Move command.distance units forward
+    duration = command.distance / forwardSpeed; // distance/(distance/ms) = ms
+    this.motorControl('FORWARD');
+    this.board.wait(duration, function () {
+        motors.left.stop();
+        motors.right.stop();
+    })
+
+    //Get the next direction
+    that.runQueue();
 }
 
 /*******************************************************************************************************/
@@ -210,10 +226,12 @@ Robot.prototype.move = function (command) {
 /*
  * move the robot in the specified direction for a defined speed and duration
  */
+/*
 Robot.prototype.move = function(command) {
   console.log('Move: ' + command.direction);
   this.motorControl(command.direction, command.speed, command.duration);
 }
+*/
 
 /*
  * Set queue for the robot
@@ -222,8 +240,9 @@ Robot.prototype.setQueue = function(list) {
   console.log('Set Queue: ' + list);
 
   // enqueue each command
-  for(var i = 0; i < list.length; i++) {
-    console.log(list[i].direction);
+  for (var i = 0; i < list.length; i++) {
+      var command = list[i];
+      console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
     this.queue.enqueue(list[i]);
   }
 }

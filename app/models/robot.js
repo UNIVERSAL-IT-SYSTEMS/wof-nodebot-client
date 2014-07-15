@@ -57,7 +57,7 @@ function Robot(id, galileoIP) {
       */
 
       //a
-      left: new five.Motor({
+      right: new five.Motor({
         pins: {
           pwm: 9,
           dir: 8,
@@ -65,7 +65,7 @@ function Robot(id, galileoIP) {
         }
       }),
       // b
-      right: new five.Motor({
+      left: new five.Motor({
         pins: {
           pwm: 10,
           dir: 12,

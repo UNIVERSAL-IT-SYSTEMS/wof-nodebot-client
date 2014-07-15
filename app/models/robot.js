@@ -34,21 +34,42 @@ function Robot(id, galileoIP) {
   // Create board and motors
   this.board.on("ready", function() {
     motors = {
-      // Each motor needs 3 pins for this shield. pwm, dir, and brake.
-      // a
+      /*
+        Seeed Studio Motor Shield V1.0, V2.0
+        Motor A
+          pwm: 9
+          dir: 8
+          cdir: 11
+        Motor B
+          pwm: 10
+          dir: 12
+          cdir: 13
+
+        Arduino MotorShield 3 
+        Motor A:
+          pwm: 3
+          dir: 12
+          brake: 9
+        Motor B:
+          pwm: 11
+          dir: 13
+          brake: 8
+      */
+
+      //a
       left: new five.Motor({
         pins: {
-          pwm: 3,
-          dir: 12,
-          brake: 9
+          pwm: 9,
+          dir: 8,
+          cdir: 11
         }
       }),
       // b
       right: new five.Motor({
         pins: {
-          pwm: 11,
-          dir: 13,
-          brake: 8 
+          pwm: 10,
+          dir: 12,
+          cdir: 13 
         }
       })
     };

@@ -192,7 +192,7 @@ Robot.prototype.motorControl = function(direction) {
                                 //Easy Calibration Functions//
 /*******************************************************************************************************/
 Robot.prototype.move = function (command) {
-    var that = this; //WHY IS THIS NEEDED? HOW DOES THIS CHANGE?
+    var that = this; //WHY IS THIS NEEDED? HOW/WHEN DOES "THIS" CHANGE?
     console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
     
     //Turn command.angle degrees
@@ -201,7 +201,7 @@ Robot.prototype.move = function (command) {
         duration = command.angle / rotationalSpeedRight; // deg/(deg/ms) = ms
         this.motorControl('RIGHT'); 
     } else if (command.angle < 0) {
-        duration = command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
+        duration = -command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
         this.motorControl('LEFT');
     }
     this.board.wait(duration, function() {

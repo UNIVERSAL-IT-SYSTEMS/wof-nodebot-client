@@ -2,10 +2,26 @@
 var net = require("net");
 var five = require("johnny-five");
 var Queue = require('../utils/Queue.js');
+var Galileo = require('galileo-io');
+var board-io = new Galileo();
 
 // variable for debugging without robot
 // Set to false if not connected.
 var isRobot = true;
+
+
+// Direct io to the board for ir sensor
+// Uses galileo-io may need to some fixes idk well see
+board-io.on("ready", function() {
+    var byte = 0;
+      this.pinMode(6, this.MODES.INPUT);
+
+      setInterval(function() {
+        board.digitalRead(6, function(data) {
+          console.log('IR-Sensor:' + data);
+        });
+      }, 500);
+});
 
 
 /*********************************************************************/
@@ -115,7 +131,7 @@ function Robot(id, galileoIP) {
       */
 
       //a
-      left: new five.Motor({
+      right: new five.Motor({
         pins: {
           pwm: 9,
           dir: 8,
@@ -123,7 +139,7 @@ function Robot(id, galileoIP) {
         }
       }),
       // b
-      right: new five.Motor({
+      left: new five.Motor({
         pins: {
           pwm: 10,
           dir: 12,

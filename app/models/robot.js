@@ -2,84 +2,18 @@
 var net = require("net");
 var five = require("johnny-five");
 var Queue = require('../utils/Queue.js');
-var Galileo = require('galileo-io');
-var board-io = new Galileo();
 
 // variable for debugging without robot
 // Set to false if not connected.
 var isRobot = true;
 
-
-// Direct io to the board for ir sensor
-// Uses galileo-io may need to some fixes idk well see
-board-io.on("ready", function() {
-    var byte = 0;
-      this.pinMode(6, this.MODES.INPUT);
-
-      setInterval(function() {
-        board.digitalRead(6, function(data) {
-          console.log('IR-Sensor:' + data);
-        });
-      }, 500);
-});
-
-
-/*********************************************************************/
-                //Calibrating Speed Variables//
-/*********************************************************************/
-//
-// Every robot will be slightly different. To calibrate your robot
-// to accurately follow your commands, follow the directions below.
-//
-// While measuring, keep in mind that your robot might move differently
-// based on what surface (ex: carpet, tile, or wood flooring) it is moving on.
-// Try to take your measurements on the surface the robot will be using most.
-// If there are significant differences in robot performance on different surfaces
-// you may want to keep the robot from going on certain surfaces that will throw it
-// off by removing those paths from your map.
-//
-/*********************************************************************/
-
-
-//if we are going to measure a consistent speed of the robot, the motors need to have a consistent PWM
+// Speed for motors
 var setPWM = 255;
 
-/**
- * Rotational speed right can be calculated by sending the command
- * {direction: RIGHT, speed: setPWM, duration: 100}
- * Then measure the degrees the robot turned. It may be helpful to mark the robot's
- * initial heading on the ground with tape to assist with measurements.
- * 
- * Try with a few different durations to make sure the degrees/duration stays relatively consistent.
- * rotationalSpeedRight = average(degrees/duration)
- */
-var rotationalSpeedRight = 1; // degrees/milisecond when turning right
-
-/**
- * Rotational speed left can be similarly calculated with
- * {direction: LEFT, speed: setPWM, duration: 100}
- * It may turn out to be the same as rotationalSpeedRight, but
- * you can't assume that will be the case.
- *
- * Again, try with a few different durations to make sure the it is relatively consistent.
- * rotationalSpeedLeft = average(degrees/duration)
- */
-var rotationalSpeedLeft = 1; // degrees/millisecond when turning right
-
-/**
- * forwardSpeed is the distance your robot moves forward in one millisecond.
- * The unit of distance you use should match the unit of distance of the map you use.
- * For example, if your directions pass in the distance in meters, forwardSpeed should be calculated in meters/millisecond. 
- *
- * Use {direction: FORWARD, speed: setPWM, duration: 100} and measure how far your robot moves forward.
- * Again, marking the ground could be helpful.
- * 
- * forwardSpeed = average(distance/duration)
- */
-var forwardSpeed = 0.5; // distance/millisecond when going forward
-
-/*********************************************************************/
-
+// Calibration variables
+var rotationalSpeedRight = .20; // degrees/milisecond when turning right
+var rotationalSpeedLeft = .20; // degrees/millisecond when turning right
+var forwardSpeed = 0.001 * 10; // distance/millisecond when going forward
 
 function Robot(id, galileoIP) {
   this.id = id;
@@ -206,25 +140,10 @@ Robot.prototype.motorControl = function(direction, duration) {
     }
 }
 
-/*******************************************************************************************************/
-                                //Easy Calibration Functions//
-/*******************************************************************************************************/
 Robot.prototype.move = function (command) {
     console.log('Direction: ' + command.direction + ', Duration: ' + command.duration);
     this.motorControl(command.direction, command.duration);
 }
-
-/*******************************************************************************************************/
-
-/*
- * move the robot in the specified direction for a defined speed and duration
- */
-/*
-Robot.prototype.move = function(command) {
-  console.log('Move: ' + command.direction);
-  this.motorControl(command.direction, command.speed, command.duration);
-}
-*/
 
 /*
  * Set queue for the robot
@@ -264,7 +183,11 @@ Robot.prototype.setQueue = function(list) {
 Robot.prototype.runQueue = function() {
   if(this.queue.isEmpty())
     return
-  this.move(this.queue.dequeue());
+  var that = this;
+      this.board.wait(2000, function() {
+
+        that.move(that.queue.dequeue());
+      });
 }
 
 module.exports = Robot;

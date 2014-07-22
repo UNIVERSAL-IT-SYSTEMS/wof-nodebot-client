@@ -1,10 +1,10 @@
 var io = require('socket.io-client');
-var serverUrl = 'http://wofnodebot.azurewebsites.net';
+var serverUrl = 'http://localhost:1337';
 var socket = io.connect(serverUrl);
 var Robot = require('./app/models/robot');
 
 // Replace GALILEO_IP with the ip address/hostname of you galileo.
-var galileoIP = 'awesomegalileo'; 
+var galileoIP = 'mygalileo'; 
 // Each robot can have an id.
 var robot = new Robot('4', galileoIP);
 

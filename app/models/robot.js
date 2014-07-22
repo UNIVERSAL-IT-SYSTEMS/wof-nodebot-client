@@ -7,13 +7,13 @@ var Queue = require('../utils/Queue.js');
 // Set to false if not connected.
 var isRobot = true;
 
-// Speed for motors
-var setPWM = 255;
 
 // Calibration variables
-var rotationalSpeedRight = .20; // degrees/milisecond when turning right
-var rotationalSpeedLeft = .20; // degrees/millisecond when turning right
-var forwardSpeed = 0.001 * 10; // distance/millisecond when going forward
+var setPWM = 255;                 // Speed for motors
+
+var rotationalSpeedRight = .1;    // degrees/milisecond when turning right
+var rotationalSpeedLeft = .1;     // degrees/millisecond when turning right
+var forwardSpeed = 0.00089;       // distance/millisecond when going forward
 
 function Robot(id, galileoIP) {
   this.id = id;
@@ -100,7 +100,7 @@ function Robot(id, galileoIP) {
  * Calls runQueue to continue the queue.
  */
 Robot.prototype.motorDuration = function(duration) {
-  var that = this;
+  var that = this;        // Allow current scope access within board func.
   this.board.wait(duration, function() {
       motors.left.stop();
       motors.right.stop();
@@ -183,11 +183,12 @@ Robot.prototype.setQueue = function(list) {
 Robot.prototype.runQueue = function() {
   if(this.queue.isEmpty())
     return
-  var that = this;
-      this.board.wait(2000, function() {
 
-        that.move(that.queue.dequeue());
-      });
+  // Wait between each command
+  var that = this;        // Allow current scope to be accessed in board.
+  this.board.wait(1000, function() {
+    that.move(that.queue.dequeue());
+  });
 }
 
 module.exports = Robot;

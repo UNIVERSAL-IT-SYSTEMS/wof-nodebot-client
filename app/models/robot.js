@@ -7,6 +7,14 @@ var Queue = require('../utils/Queue.js');
 // Set to false if not connected.
 var isRobot = true;
 
+
+// Calibration variables
+var setPWM = 255;                 // Speed for motors
+
+var rotationalSpeedRight = .1;    // degrees/milisecond when turning right
+var rotationalSpeedLeft = .1;     // degrees/millisecond when turning right
+var forwardSpeed = 0.00089;       // distance/millisecond when going forward
+
 function Robot(id, galileoIP) {
   this.id = id;
   this.queue = new Queue();
@@ -57,7 +65,7 @@ function Robot(id, galileoIP) {
       */
 
       //a
-      left: new five.Motor({
+      right: new five.Motor({
         pins: {
           pwm: 9,
           dir: 8,
@@ -65,7 +73,7 @@ function Robot(id, galileoIP) {
         }
       }),
       // b
-      right: new five.Motor({
+      left: new five.Motor({
         pins: {
           pwm: 10,
           dir: 12,
@@ -92,7 +100,7 @@ function Robot(id, galileoIP) {
  * Calls runQueue to continue the queue.
  */
 Robot.prototype.motorDuration = function(duration) {
-  var that = this;
+  var that = this;        // Allow current scope access within board func.
   this.board.wait(duration, function() {
       motors.left.stop();
       motors.right.stop();
@@ -103,27 +111,27 @@ Robot.prototype.motorDuration = function(duration) {
 /*
  * Control the motors on the robot.
  */
-Robot.prototype.motorControl = function(direction, speed, duration) {
+Robot.prototype.motorControl = function(direction, duration) {
   switch(direction) {
       case 'FORWARD':
-        motors.left.fwd(speed);
-        motors.right.fwd(speed);
-        this.motorDuration(duration);
+        motors.left.fwd(setPWM);
+        motors.right.fwd(setPWM);
+        this.motorDuration(duration)
         break;
       case 'BACKWARD':
-        motors.left.rev(speed);
-        motors.right.rev(speed);
-        this.motorDuration(duration);
+          motors.left.rev(setPWM);
+          motors.right.rev(setPWM);
+          this.motorDuration(duration)
         break;
       case 'LEFT':
-        motors.left.rev(speed);
-        motors.right.fwd(speed);
-        this.motorDuration(duration);
+          motors.left.rev(setPWM);
+          motors.right.fwd(setPWM);
+          this.motorDuration(duration)
         break;
       case 'RIGHT':
-        motors.left.fwd(speed);
-        motors.right.rev(speed);
-        this.motorDuration(duration);
+          motors.left.fwd(setPWM);
+          motors.right.rev(setPWM);
+          this.motorDuration(duration)
         break;
       case 'STOP':
         motors.left.stop();
@@ -132,12 +140,9 @@ Robot.prototype.motorControl = function(direction, speed, duration) {
     }
 }
 
-/*
- * move the robot in the specified direction for a defined speed and duration
- */
-Robot.prototype.move = function(command) {
-  console.log('Move: ' + command.direction);
-  this.motorControl(command.direction, command.speed, command.duration);
+Robot.prototype.move = function (command) {
+    console.log('Direction: ' + command.direction + ', Duration: ' + command.duration);
+    this.motorControl(command.direction, command.duration);
 }
 
 /*
@@ -147,9 +152,28 @@ Robot.prototype.setQueue = function(list) {
   console.log('Set Queue: ' + list);
 
   // enqueue each command
-  for(var i = 0; i < list.length; i++) {
-    console.log(list[i].direction);
-    this.queue.enqueue(list[i]);
+  for (var i = 0; i < list.length; i++) {
+      var command = list[i];
+      console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
+
+      var direction;
+      var duration;
+      if (command.angle > 0) {
+          duration = command.angle / rotationalSpeedRight; // deg/(deg/ms) = ms
+          direction = 'RIGHT';
+      } else if (command.angle < 0) {
+          duration = -command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
+          direction = 'LEFT';
+      }
+
+      if(command.angle != 0){
+          var angleCommand = { direction: direction, duration: duration };
+          this.queue.enqueue(angleCommand);
+      }
+      if (command.distance != 0) {
+          var distanceCommand = { direction: 'FORWARD', duration: command.distance / forwardSpeed };
+          this.queue.enqueue(distanceCommand);
+      }
   }
 }
 
@@ -159,7 +183,12 @@ Robot.prototype.setQueue = function(list) {
 Robot.prototype.runQueue = function() {
   if(this.queue.isEmpty())
     return
-  this.move(this.queue.dequeue());
+
+  // Wait between each command
+  var that = this;        // Allow current scope to be accessed in board.
+  this.board.wait(1000, function() {
+    that.move(that.queue.dequeue());
+  });
 }
 
 module.exports = Robot;

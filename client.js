@@ -4,7 +4,7 @@ var socket = io.connect(serverUrl);
 var Robot = require('./app/models/robot');
 
 // Replace GALILEO_IP with the ip address/hostname of you galileo.
-var galileoIP = 'GALILEO_IP'; 
+var galileoIP = 'mygalileo'; 
 // Each robot can have an id.
 var robot = new Robot('4', galileoIP);
 
@@ -23,6 +23,7 @@ socket.on('robotControl', function(command){
 socket.on('robotControlList', function(data) {
   console.log(data);
   var commandList = data.commandList;
+  console.log(commandList);
 
   robot.setQueue(commandList);
   robot.runQueue();

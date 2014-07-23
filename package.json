@@ -1,9 +1,14 @@
 {
-  "name": "wofbot-api",
-  "description": "The most ridiculous thing",
-  "version": "0.0.1",
+  "name": "wof-nodebot-client",
+  "description": "Socket client that controls an Intel Galileo using Johnny-Five.",
+  "keywords": "robots, galileo",
+  "homepage": "http://ms-iot.github.io/windows-on-fridges",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/ms-iot/wof-nodebot"
+  },
+  "version": "0.0.2",
   "dependencies": {
-    "express": "~4.4.1",
     "johnny-five": "~0.7.47",
     "socket.io-client": "^1.0.6"
   }

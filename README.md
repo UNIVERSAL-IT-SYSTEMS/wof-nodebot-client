@@ -38,11 +38,3 @@ motors.right.rev(100) // right motor reverse at reduced speed
 motors.right.stop()   // stop right motor
 motors.left.stop()    // stop left motor
 ```
-
-You can also make a post request to the server at the ip address of the machine or Galileo it is running on at the port specified in the server.
-```
-curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"angle":90, "distance":2}'  http://localhost:1337/robot
-```
-"localhost" in the example can be changed to the domain the server is running on.
-
-You can also post a list of commands. Just post an array of the command objects to localhost:1337/robot/list

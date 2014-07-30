@@ -8,7 +8,9 @@ To set up your Galileo see the [documentation](http://ms-iot.github.io/windows-o
 These docs will explain how to build the physical robot with Galileo.
 
 To build server run:
+```
     npm install
+```
 This will install all necessary packages to the node_modules folder.
 
 In order for Johnny-Five to work line 485 in node_modules/lib/board.js must be commented out.

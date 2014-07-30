@@ -1,23 +1,24 @@
 # WoF Server and Client
 
+_For more information read our [docs](http://ms-iot.github.io/windows-on-fridges)_
+
 ## Node socket client that controls the Galileo
-* Client takes instructions from server and controls the hardware with Johnny-Five.
+Client takes instructions from [server](https://github.com/ms-iot/wof-nodebot-server) and controls the hardware with Johnny-Five.
 
 ## Setup
 To set up your Galileo see the [documentation](http://ms-iot.github.io/windows-on-fridges/nodebot/building).
 These docs will explain how to build the physical robot with Galileo.
 
-To build server run:
+To install project dependencies run
 ```
-    npm install
+npm install
 ```
-This will install all necessary packages to the node_modules folder.
 
 In order for Johnny-Five to work line 485 in node_modules/lib/board.js must be commented out.
+If this line isn't commented out the server will throw an exception when you try to run it.
 ```
 message[color],
 ```
-If this line isn't commented out the server will throw an exception when you try to run it.
 
 Then in client.js change galileoIP to your hostname or IP address
 ```
@@ -28,7 +29,7 @@ To start the server, first run the Firmata project from visual studio on your Ga
 Then from command line run the following command 
 
 ```
-node server.js
+node client.js
 ```
 
 This will launch the REPL to interact with the board, the motors are injected into the REPL and can be controlled directly

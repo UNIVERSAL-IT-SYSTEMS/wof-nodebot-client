@@ -24,6 +24,8 @@ function Robot(id, galileoIP) {
   this.queue = new Queue();
   this.currentQueue = new Queue();
   this.runningQueue = false;
+  this.stack = new Array();
+  this.runningStack = false;
 
   if(isRobot) {
   // Create socket to communicate with firmata on the Galileo
@@ -110,7 +112,11 @@ Robot.prototype.motorDuration = function(duration) {
   this.board.wait(duration, function() {
       motors.left.stop();
       motors.right.stop();
-      that.nextInstruction();
+      if (that.runningStack) {
+          that.nextStackInstruction();
+      } else {
+          that.nextInstruction();
+      }
   });
 }
 
@@ -148,6 +154,10 @@ Robot.prototype.motorControl = function(direction, duration) {
 
 Robot.prototype.move = function (command) {
     console.log('Doing:  Direction: ' + command.direction + ', Duration: ' + command.duration);
+    if (autoReturn) {
+        console.log('Should add to stack negative of Direction: ' + command.direction + ', Duration: ' + command.duration);
+        //stack.push(//negative command)
+    }
     this.motorControl(command.direction, command.duration);
 }
 
@@ -226,12 +236,35 @@ Robot.prototype.runQueue = function () {
  */
 Robot.prototype.nextInstruction = function () {
     if (this.currentQueue.isEmpty()) {
+        if (autoReturn) {
+            this.runningStack = true;
+            var that = this;        // Allow current scope to be accessed in board.
+            this.board.wait(10000, function () {  // wait a bit for drink to be picked up
+                that.nextStackInstruction();
+            });
+            return
+        }
         this.runQueue();
         return
     }
     var that = this;        // Allow current scope to be accessed in board.
     this.board.wait(1000, function () {
         that.move(that.currentQueue.dequeue());
+    });
+}
+
+/*
+ * Runs the stack until robot is back where it started.
+ */
+Robot.prototype.nextStackInstruction = function () {
+    if (this.stack.isEmpty()) {
+        this.runningStack = false;
+        this.runQueue();
+        return
+    }
+    var that = this;        // Allow current scope to be accessed in board.
+    this.board.wait(1000, function () {
+        that.move(that.stack.pop());
     });
 }
 

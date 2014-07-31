@@ -28,78 +28,78 @@ function Robot(id, galileoIP) {
   this.runningStack = false;
 
   if(isRobot) {
-  // Create socket to communicate with firmata on the Galileo
-  this.socket = net.createConnection(27015, galileoIP);
-    console.log('Socket created.');
-  this.socket.on('data', function (data) {
-    // Log the response from the HTTP server.
-    console.log('RESPONSE: ' + data);
-  }).on('connect', function () {
-    // Manually write an HTTP request.
-    console.log("connected");
-  }).on('end', function () {
-    console.log('DONE');
-  });
+      // Create socket to communicate with firmata on the Galileo
+      this.socket = net.createConnection(27015, galileoIP);
+        console.log('Socket created.');
+      this.socket.on('data', function (data) {
+        // Log the response from the HTTP server.
+        console.log('RESPONSE: ' + data);
+      }).on('connect', function () {
+        // Manually write an HTTP request.
+        console.log("connected");
+      }).on('end', function () {
+        console.log('DONE');
+      });
 
-  // New johnny-five board
-  // With socket connection
-  this.board = new five.Board({
-    port: this.socket
-  });
+      // New johnny-five board
+      // With socket connection
+      this.board = new five.Board({
+        port: this.socket
+      });
 
-  // Create board and motors
-  this.board.on("ready", function() {
-    motors = {
-      /*
-        Seeed Studio Motor Shield V1.0, V2.0
-        Motor A
-          pwm: 9
-          dir: 8
-          cdir: 11
-        Motor B
-          pwm: 10
-          dir: 12
-          cdir: 13
+      // Create board and motors
+      this.board.on("ready", function () {
+        motors = {
+          /*
+            Seeed Studio Motor Shield V1.0, V2.0
+            Motor A
+              pwm: 9
+              dir: 8
+              cdir: 11
+            Motor B
+              pwm: 10
+              dir: 12
+              cdir: 13
 
-        Arduino MotorShield 3 
-        Motor A:
-          pwm: 3
-          dir: 12
-          brake: 9
-        Motor B:
-          pwm: 11
-          dir: 13
-          brake: 8
-      */
+            Arduino MotorShield 3 
+            Motor A:
+              pwm: 3
+              dir: 12
+              brake: 9
+            Motor B:
+              pwm: 11
+              dir: 13
+              brake: 8
+          */
 
-      //a
-      right: new five.Motor({
-        pins: {
-          pwm: 9,
-          dir: 8,
-          cdir: 11
-        }
-      }),
-      // b
-      left: new five.Motor({
-        pins: {
-          pwm: 10,
-          dir: 12,
-          cdir: 13 
-        }
-      })
-    };
+          //a
+          right: new five.Motor({
+            pins: {
+              pwm: 9,
+              dir: 8,
+              cdir: 11
+            }
+          }),
+          // b
+          left: new five.Motor({
+            pins: {
+              pwm: 10,
+              dir: 12,
+              cdir: 13 
+            }
+          })
+        };
 
-    // Allow override control of motors from the REPL
-    // E.g. >> motors.left.fwd(255)
-    this.repl.inject({
-      motors: motors
-    });
+        // Allow override control of motors from the REPL
+        // E.g. >> motors.left.fwd(255)
+        this.repl.inject({
+          motors: motors
+        });
 
-    // Turn on brakes when we create the board
-    motors.left.brake();
-    motors.right.brake();
-  });
+        // Turn on brakes when we create the board
+        motors.left.brake();
+        motors.right.brake();
+      });
   }
 }
 
@@ -109,9 +109,11 @@ function Robot(id, galileoIP) {
  */
 Robot.prototype.motorDuration = function(duration) {
   var that = this;        // Allow current scope access within board func.
-  this.board.wait(duration, function() {
-      motors.left.stop();
-      motors.right.stop();
+  this.board.wait(duration, function () {
+      if (isRobot) {
+          motors.left.stop();
+          motors.right.stop();
+      }
       if (that.runningStack) {
           that.nextStackInstruction();
       } else {
@@ -126,28 +128,38 @@ Robot.prototype.motorDuration = function(duration) {
 Robot.prototype.motorControl = function(direction, duration) {
   switch(direction) {
       case 'FORWARD':
-        motors.left.fwd(setPWM);
-        motors.right.fwd(setPWM);
+        if (isRobot) {
+            motors.left.fwd(setPWM);
+            motors.right.fwd(setPWM);
+        }
         this.motorDuration(duration)
         break;
       case 'BACKWARD':
-          motors.left.rev(setPWM);
-          motors.right.rev(setPWM);
+          if (isRobot) {
+              motors.left.rev(setPWM);
+              motors.right.rev(setPWM);
+          }
           this.motorDuration(duration)
         break;
       case 'LEFT':
-          motors.left.rev(setPWM);
-          motors.right.fwd(setPWM);
+          if (isRobot) {
+              motors.left.rev(setPWM);
+              motors.right.fwd(setPWM);
+          }
           this.motorDuration(duration)
         break;
       case 'RIGHT':
-          motors.left.fwd(setPWM);
-          motors.right.rev(setPWM);
+          if (isRobot) {
+              motors.left.fwd(setPWM);
+              motors.right.rev(setPWM);
+          }
           this.motorDuration(duration)
         break;
       case 'STOP':
-        motors.left.stop();
-        motors.right.stop();
+        if (isRobot) {
+            motors.left.stop();
+            motors.right.stop();
+        }
         break;
     }
 }

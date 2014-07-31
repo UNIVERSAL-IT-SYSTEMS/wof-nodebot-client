@@ -25,6 +25,6 @@ socket.on('robotControlList', function(data) {
   var commandList = data.commandList;
   console.log(commandList);
 
-  robot.setQueue(commandList);
+  robot.addToQueue(commandList);
   robot.runQueue();
 });

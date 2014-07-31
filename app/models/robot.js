@@ -6,7 +6,7 @@ var Queue = require('../utils/Queue.js');
 // variable for debugging without robot
 // Set to false if not connected.
 var isRobot = true;
-
+var runningQueue = false;
 
 // Calibration variables
 var setPWM = 255;                 // Speed for motors
@@ -18,6 +18,7 @@ var forwardSpeed = 0.00089;       // distance/millisecond when going forward
 function Robot(id, galileoIP) {
   this.id = id;
   this.queue = new Queue();
+  this.currentQueue = new Queue();
 
   if(isRobot) {
   // Create socket to communicate with firmata on the Galileo
@@ -104,7 +105,7 @@ Robot.prototype.motorDuration = function(duration) {
   this.board.wait(duration, function() {
       motors.left.stop();
       motors.right.stop();
-      that.runQueue();
+      that.nextInstruction();
   });
 }
 
@@ -141,20 +142,20 @@ Robot.prototype.motorControl = function(direction, duration) {
 }
 
 Robot.prototype.move = function (command) {
-    console.log('Direction: ' + command.direction + ', Duration: ' + command.duration);
+    console.log('Doing:  Direction: ' + command.direction + ', Duration: ' + command.duration);
     this.motorControl(command.direction, command.duration);
 }
 
 /*
  * Set queue for the robot
  */
-Robot.prototype.setQueue = function(list) {
+Robot.prototype.setQueue = function(list, newQueue) {
   console.log('Set Queue: ' + list);
 
   // enqueue each command
   for (var i = 0; i < list.length; i++) {
       var command = list[i];
-      console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
+      console.log('Queuing:  Turn: ' + command.angle + ', Go forward: ' + command.distance);
 
       var angleDirection;
       var turnDuration;
@@ -181,27 +182,52 @@ Robot.prototype.setQueue = function(list) {
 
       if(command.angle != 0){
           var angleCommand = { direction: angleDirection, duration: turnDuration };
-          this.queue.enqueue(angleCommand);
+          newQueue.enqueue(angleCommand);
       }
       if (command.distance != 0) {
           var distanceCommand = { direction: distanceDirection, duration: distanceDuration };
-          this.queue.enqueue(distanceCommand);
+          newQueue.enqueue(distanceCommand);
       }
   }
 }
 
 /*
- * Run the queue of commands
+ * Creates a new queue with the newest set of instructions and addes it to the master queue.
  */
-Robot.prototype.runQueue = function() {
-  if(this.queue.isEmpty())
-    return
+Robot.prototype.addToQueue = function (list) {
+    var newQueue;
+    robot.setQueue(list, newQueue);
+    this.queue.enqueue(newQueue);
+    if (!runningQueue) {
+        runningQueue = true;
+        this.runQueue;
+    }
+}
 
-  // Wait between each command
-  var that = this;        // Allow current scope to be accessed in board.
-  this.board.wait(1000, function() {
-    that.move(that.queue.dequeue());
-  });
+/*
+ * Sets up the next queue of commands to run.
+ */
+Robot.prototype.runQueue = function () {
+    if (this.queue.isEmpty()) {
+        runningQueue = false;
+        return;
+    }
+    this.currentQueue = this.queue.dequeue();
+    this.nextInstruction();
+}
+
+/*
+ * Run the current queue of commands.
+ */
+Robot.prototype.nextInstruction = function () {
+    if (this.currentQueue.isEmpty()) {
+        this.runQueue();
+        return
+    }
+    var that = this;        // Allow current scope to be accessed in board.
+    this.board.wait(1000, function () {
+        that.move(that.currentQueue.dequeue());
+    });
 }
 
 module.exports = Robot;

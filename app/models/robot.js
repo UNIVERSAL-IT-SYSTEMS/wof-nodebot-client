@@ -156,22 +156,35 @@ Robot.prototype.setQueue = function(list) {
       var command = list[i];
       console.log('Turn: ' + command.angle + ', Go forward: ' + command.distance);
 
-      var direction;
-      var duration;
+      var angleDirection;
+      var turnDuration;
+      var distanceDirection;
+      var distanceDuration;
+
+      //Left or right direction and duration
       if (command.angle > 0) {
-          duration = command.angle / rotationalSpeedRight; // deg/(deg/ms) = ms
-          direction = 'RIGHT';
+          turnDuration = command.angle / rotationalSpeedRight; // deg/(deg/ms) = ms
+          angleDirection = 'LEFT';
       } else if (command.angle < 0) {
-          duration = -command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
-          direction = 'LEFT';
+          turnDuration = -command.angle / rotationalSpeedLeft; // deg/(deg/ms) = ms
+          angleDirection = 'RIGHT';
+      }
+
+      //forward or back direction and duration
+      if (command.distance > 0) {
+          distanceDuration = command.distance / forwardSpeed; // distance/(distance/ms) = ms
+          distanceDirection = 'FORWARD';
+      } else if (command.angle < 0) {
+          distanceDuration = -command.distance / forwardSpeed; // distance/(distance/ms) = ms
+          distanceDirection = 'BACKWARD';
       }
 
       if(command.angle != 0){
-          var angleCommand = { direction: direction, duration: duration };
+          var angleCommand = { direction: angleDirection, duration: turnDuration };
           this.queue.enqueue(angleCommand);
       }
       if (command.distance != 0) {
-          var distanceCommand = { direction: 'FORWARD', duration: command.distance / forwardSpeed };
+          var distanceCommand = { direction: distanceDirection, duration: distanceDuration };
           this.queue.enqueue(distanceCommand);
       }
   }

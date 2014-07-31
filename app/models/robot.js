@@ -6,7 +6,11 @@ var Queue = require('../utils/Queue.js');
 // variable for debugging without robot
 // Set to false if not connected.
 var isRobot = true;
-var runningQueue = false;
+
+//variable for whether you want to robot to
+//automatically return to starting position
+//after following instructions.
+var autoReturn = true
 
 // Calibration variables
 var setPWM = 255;                 // Speed for motors
@@ -19,6 +23,7 @@ function Robot(id, galileoIP) {
   this.id = id;
   this.queue = new Queue();
   this.currentQueue = new Queue();
+  this.runningQueue = false;
 
   if(isRobot) {
   // Create socket to communicate with firmata on the Galileo
@@ -198,8 +203,8 @@ Robot.prototype.addToQueue = function (list) {
     var newQueue;
     robot.setQueue(list, newQueue);
     this.queue.enqueue(newQueue);
-    if (!runningQueue) {
-        runningQueue = true;
+    if (!this.runningQueue) {
+        this.runningQueue = true;
         this.runQueue;
     }
 }
@@ -209,7 +214,7 @@ Robot.prototype.addToQueue = function (list) {
  */
 Robot.prototype.runQueue = function () {
     if (this.queue.isEmpty()) {
-        runningQueue = false;
+        this.runningQueue = false;
         return;
     }
     this.currentQueue = this.queue.dequeue();

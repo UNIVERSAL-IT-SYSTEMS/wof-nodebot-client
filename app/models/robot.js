@@ -222,8 +222,8 @@ Robot.prototype.setQueue = function(list, newQueue) {
  * Creates a new queue with the newest set of instructions and addes it to the master queue.
  */
 Robot.prototype.addToQueue = function (list) {
-    var newQueue;
-    robot.setQueue(list, newQueue);
+    var newQueue = new Queue();
+    this.setQueue(list, newQueue);
     this.queue.enqueue(newQueue);
     if (!this.runningQueue) {
         this.runningQueue = true;
